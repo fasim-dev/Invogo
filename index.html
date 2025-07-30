@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INVOGO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Courier Prime', monospace;
+      margin: 0; background: #f9f9f9;
+      transition: background 0.3s;
+    }
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      display: flex; justify-content: space-between;
+      align-items: center;
+    }
+    .btn {
+      background: #4CAF50; color: white;
+      padding: 10px 15px; margin: 5px;
+      border: none; border-radius: 5px;
+      cursor: pointer;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background: white;
+    }
+    .form-control {
+      width: 100%; padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    input[type='number'] { width: 70px; }
+    .dark-mode {
+      background: #1c1c1e; color: #e5e5e7;
+    }
+    .dark-mode .container {
+      background: #2c2c2e;
+      color: #e5e5e7;
+    }
+    .dark-mode input {
+      background: #38383a;
+      color: #e5e5e7;
+      border: 1px solid #555;
+    }
+    .dark-mode header {
+      background: #244d3c;
+    }
+    .dark-mode .btn {
+      background: #3e8e7e;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9em;
+      color: #666;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="container" style="max-width: 400px; margin-top: 60px;">
+  <h2>🔐 Login Pengguna</h2>
+  <input class="form-control" id="loginName" placeholder="Nama Pengguna">
+  <input class="form-control" id="loginPin" placeholder="PIN (4 digit)" type="password" maxlength="4">
+  <button class="btn" onclick="loginUser()">Masuk</button>
+</div>
+
+<!-- HEADER -->
+<header style="display: none;">
+  <h1>INVOGO</h1>
+  <div>
+    <button class="btn" onclick="toggleDarkMode()" id="darkModeToggle">🌙</button>
+    <button class="btn" onclick="logoutUser()" id="logoutBtn">🚪 Logout</button>
+  </div>
+</header>
+
+  <!-- HALAMAN NOTA -->
+<div id="nota" class="container" style="display: none;">
+  <h2>Buat Nota</h2>
+  <input class="form-control" id="client" placeholder="Nama Pelanggan">
+  <input class="form-control" id="clientPhone" placeholder="Nomor HP (628...)">
+  <input class="form-control" id="clientEmail" placeholder="Email Pelanggan">
+  <input class="form-control" id="notaNumber" placeholder="Nomor Nota (misal: INV-001)">
+
+  <h3>Barang Dibeli</h3>
+  <table id="items">
+    <thead>
+      <tr><th>Nama Barang</th><th>Qty</th><th>Harga</th><th>Total</th><th>Aksi</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button class="btn" onclick="addItem()">➕ Tambah Barang</button>
+  <button class="btn" onclick="clearItems()">🗑️ Reset Barang</button>
+
+  <h3>Total Keseluruhan: <span id="grandTotal">Rp 0</span></h3>
+
+  <h3>Kirim Nota</h3>
+  <button class="btn" onclick="generatePreview()">🔎Preview</button>
+  <h3>Tanda Tangan</h3>
+<canvas id="signature" width="300" height="100" style="border:1px solid #ccc;"></canvas><br>
+<button class="btn" onclick="clearSignature()">🧼 Hapus Tanda Tangan</button>
+<div id="previewNota" style="margin-top:20px; padding:15px; border:1px solid #ccc; display:none;">
+  <h3>Preview</h3>
+  <p><strong>Nama:</strong> <span id="pNama"></span></p>
+  <p><strong>No. HP:</strong> <span id="pHP"></span></p>
+  <p><strong>Email:</strong> <span id="pEmail"></span></p>
+  <p><strong>Nomor Nota:</strong> <span id="pNota"></span></p>
+  <table id="previewItems" border="1" style="width:100%; border-collapse: collapse;">
+    <thead><tr><th>Barang</th><th>Qty</th><th>Harga</th><th>Total</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p><strong>Total Keseluruhan:</strong> <span id="pGrandTotal"></span>
+    <br>
+    <h4>Disetujui oleh:</h4>
+<img id="ttdPreview" src="" width="200">
+  </p>
+</div>
+  <button class="btn" onclick="downloadPDF()">📄PDF</button>
+  <button class="btn" onclick="kirimWhatsapp()">📲 WhatsApp</button>
+  <button class="btn" onclick="kirimEmail()">✉️ Email</button>
+</div>
+
+<footer>InvoGo by Fasim Dev 2025</footer>
+
+<script>
+function loginUser() {
+  const name = document.getElementById("loginName").value.trim();
+  const pin = document.getElementById("loginPin").value.trim();
+  if (!name || !/^[0-9]{4}$/.test(pin)) {
+    alert("Nama dan PIN 4 digit wajib diisi."); return;
+  }
+  localStorage.setItem("invogo_user", name);
+  localStorage.setItem("invogo_pin", pin);
+  document.getElementById("login").style.display = "none";
+  document.querySelector("header").style.display = "flex";
+  document.getElementById("nota").style.display = "block";
+  loadItems();
+}
+
+function logoutUser() {
+  if (confirm("Yakin logout?")) {
+    localStorage.clear(); location.reload();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (localStorage.getItem("invogo_user")) {
+    document.getElementById("login").style.display = "none";
+    document.querySelector("header").style.display = "flex";
+    document.getElementById("nota").style.display = "block";
+    loadItems();
+  }
+  if (localStorage.getItem("invogo_mode") === "dark") {
+    document.body.classList.add("dark-mode");
+    document.getElementById("darkModeToggle").textContent = "☀️";
+  }
+});
+
+function toggleDarkMode() {
+  document.body.classList.toggle("dark-mode");
+  const mode = document.body.classList.contains("dark-mode") ? "dark" : "light";
+  localStorage.setItem("invogo_mode", mode);
+  document.getElementById("darkModeToggle").textContent = mode === "dark" ? "☀️" : "🌙";
+}
+
+function addItem(name = "", qty = 1, price = 0) {
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td><input value="${name}" onchange="saveItems()"></td>
+    <td><input type="number" value="${qty}" onchange="saveItems()"></td>
+    <td><input type="number" value="${price}" onchange="saveItems()"></td>
+    <td class="total">Rp 0</td>
+    <td><button onclick="this.closest('tr').remove(); saveItems();">❌</button></td>
+  `;
+  document.querySelector("#items tbody").appendChild(row);
+  saveItems();
+}
+
+function saveItems() {
+  const data = [];
+  document.querySelectorAll("#items tbody tr").forEach(tr => {
+    const [nama, qty, harga] = tr.querySelectorAll("input");
+    const total = parseFloat(qty.value) * parseFloat(harga.value);
+    tr.querySelector(".total").innerText = "Rp " + total.toLocaleString();
+    data.push({ nama: nama.value, qty: qty.value, harga: harga.value });
+  });
+  localStorage.setItem("invogo_barang", JSON.stringify(data));
+  updateTotal();
+}
+
+function loadItems() {
+  const items = JSON.parse(localStorage.getItem("invogo_barang") || "[]");
+  items.forEach(i => addItem(i.nama, i.qty, i.harga));
+}
+
+function clearItems() {
+  if (confirm("Hapus semua barang?")) {
+    localStorage.removeItem("invogo_barang");
+    document.querySelector("#items tbody").innerHTML = "";
+    updateTotal();
+  }
+}
+
+function updateTotal() {
+  let total = 0;
+  document.querySelectorAll("#items tbody tr").forEach(tr => {
+    const qty = parseFloat(tr.querySelectorAll("input")[1].value);
+    const harga = parseFloat(tr.querySelectorAll("input")[2].value);
+    total += qty * harga;
+  });
+  document.getElementById("grandTotal").innerText = "Rp " + total.toLocaleString();
+}
+
+function kirimWhatsapp() {
+  const nama = document.getElementById("client").value;
+  const phone = document.getElementById("clientPhone").value.replace(/[^0-9]/g, "");
+  const nota = document.getElementById("notaNumber").value;
+  const total = document.getElementById("grandTotal").innerText;
+  const pesan = encodeURIComponent(`Halo ${nama}, berikut adalah nota Anda.\\nNo: ${nota}\\nTotal: ${total}\\nTerima kasih 🙏`);
+  if (phone.length >= 10) {
+    window.open(`https://wa.me/${phone}?text=${pesan}`, '_blank');
+  } else {
+    alert("Nomor HP tidak valid.");
+  }
+}
+
+function kirimEmail() {
+  const nama = document.getElementById("client").value;
+  const email = document.getElementById("clientEmail").value;
+  const nota = document.getElementById("notaNumber").value;
+  const total = document.getElementById("grandTotal").innerText;
+  const subject = `Nota INVOGO - ${nota}`;
+  const body = `Halo ${nama},%0D%0ANota Anda:%0D%0ANomor: ${nota}%0D%0ATotal: ${total}%0D%0ATerima kasih.`;
+  if (email.includes("@")) {
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  } else {
+    alert("Email tidak valid.");
+  }
+}
+  
+function generatePreview() {
+  document.getElementById("pNama").innerText = document.getElementById("client").value;
+  document.getElementById("pHP").innerText = document.getElementById("clientPhone").value;
+  document.getElementById("pEmail").innerText = document.getElementById("clientEmail").value;
+  document.getElementById("pNota").innerText = document.getElementById("notaNumber").value;
+  document.getElementById("pGrandTotal").innerText = document.getElementById("grandTotal").innerText;
+
+  const tbody = document.getElementById("previewItems").querySelector("tbody");
+  tbody.innerHTML = "";
+  document.querySelectorAll("#items tbody tr").forEach(tr => {
+    const cells = tr.querySelectorAll("input");
+    const nama = cells[0].value;
+    const qty = cells[1].value;
+    const harga = cells[2].value;
+    const total = parseFloat(qty) * parseFloat(harga);
+    const row = `<tr><td>${nama}</td><td>${qty}</td><td>${harga}</td><td>Rp ${total.toLocaleString()}</td></tr>`;
+    tbody.innerHTML += row;
+  });
+
+  document.getElementById("previewNota").style.display = "block";
+}
+
+  function downloadPDF() {
+  const element = document.getElementById("previewNota");
+  const opt = {
+    margin:       0.5,
+    filename:     'Nota_INVOGO.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(element).save();
+}
+function clearSignature() {
+  const canvas = document.getElementById("signature");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function generatePreview() {
+  document.getElementById("pNama").innerText = document.getElementById("client").value;
+  document.getElementById("pHP").innerText = document.getElementById("clientPhone").value;
+  document.getElementById("pEmail").innerText = document.getElementById("clientEmail").value;
+  document.getElementById("pNota").innerText = document.getElementById("notaNumber").value;
+  document.getElementById("pGrandTotal").innerText = document.getElementById("grandTotal").innerText;
+
+  const tbody = document.getElementById("previewItems").querySelector("tbody");
+  tbody.innerHTML = "";
+  document.querySelectorAll("#items tbody tr").forEach(tr => {
+    const cells = tr.querySelectorAll("input");
+    const nama = cells[0].value;
+    const qty = cells[1].value;
+    const harga = cells[2].value;
+    const total = parseFloat(qty) * parseFloat(harga);
+    const row = `<tr><td>${nama}</td><td>${qty}</td><td>${harga}</td><td>Rp ${total.toLocaleString()}</td></tr>`;
+    tbody.innerHTML += row;
+  });
+
+  // ambil tanda tangan
+  const canvas = document.getElementById("signature");
+  const dataURL = canvas.toDataURL("image/png");
+  document.getElementById("ttdPreview").src = dataURL;
+
+  document.getElementById("previewNota").style.display = "block";
+}
+
+// Enable TTD
+document.addEventListener("DOMContentLoaded", () => {
+  const canvas = document.getElementById("signature");
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    let isDrawing = false;
+
+    canvas.addEventListener("mousedown", e => {
+      isDrawing = true;
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
+    });
+
+    canvas.addEventListener("mousemove", e => {
+      if (isDrawing) {
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+      }
+    });
+
+    canvas.addEventListener("mouseup", () => isDrawing = false);
+    canvas.addEventListener("mouseout", () => isDrawing = false);
+  }
+});
+
+  
+</script>
+
+</body>
+</html>
