@@ -5,352 +5,629 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>INVOGO</title>
   <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     body {
       font-family: 'Courier Prime', monospace;
-      margin: 0; background: #f9f9f9;
-      transition: background 0.3s;
+      margin: 0; 
+      background: #f9f9f9;
     }
     header {
-      background: #4CAF50;
+      background: #4CAF50; 
       color: white;
       padding: 10px 20px;
-      display: flex; justify-content: space-between;
+      display: flex; 
+      justify-content: space-between; 
       align-items: center;
     }
-    .btn {
-      background: #4CAF50; color: white;
-      padding: 10px 15px; margin: 5px;
-      border: none; border-radius: 5px;
-      cursor: pointer;
+    .toggle-sidebar { 
+      display: none; 
+      background: none; 
+      color: white; 
+      border: none; 
+      font-size: 20px; 
+      cursor: pointer; 
+    }
+    nav { 
+      display: flex; 
+      gap: 10px; 
     }
     .container {
-      max-width: 800px;
-      margin: auto;
-      padding: 20px;
+      max-width: 800px; 
+      margin: 20px auto; 
+      padding: 20px; 
       background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .form-control {
-      width: 100%; padding: 10px;
+      width: 100%; 
+      padding: 10px; 
       margin-bottom: 10px;
+      border-radius: 5px; 
       border: 1px solid #ccc;
-      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    .table-wrapper { 
+      overflow-x: auto; 
+      margin-bottom: 15px; 
     }
     table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
+      width: 100%; 
+      border-collapse: collapse; 
+      min-width: 600px;
     }
     th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
+      border: 1px solid #ccc; 
+      padding: 8px; 
       text-align: left;
     }
-    input[type='number'] { width: 70px; }
-    .dark-mode {
-      background: #1c1c1e; color: #e5e5e7;
+    canvas {
+      border: 1px solid #ccc; 
+      border-radius: 5px; 
+      touch-action: none;
+      background: white; 
+      cursor: crosshair;
     }
-    .dark-mode .container {
-      background: #2c2c2e;
-      color: #e5e5e7;
+    .btn {
+      background: #4CAF50; 
+      color: white;
+      padding: 10px 15px; 
+      margin: 5px 5px 5px 0;
+      border: none; 
+      border-radius: 5px; 
+      cursor: pointer;
+      transition: background 0.3s;
     }
-    .dark-mode input {
-      background: #38383a;
-      color: #e5e5e7;
-      border: 1px solid #555;
+    .btn:hover { 
+      background: #45a049; 
     }
-    .dark-mode header {
-      background: #244d3c;
+    .btn-danger { 
+      background: #f44336; 
     }
-    .dark-mode .btn {
-      background: #3e8e7e;
+    .btn-danger:hover { 
+      background: #d32f2f; 
     }
     footer {
-      text-align: center;
+      text-align: center; 
+      padding: 15px; 
+      font-size: 0.9em; 
+      color: white;
+      background: #4CAF50;
+      margin-top: 20px;
+    }
+    #previewNota {
+      display: none; 
+      position: relative; 
       padding: 20px;
-      font-size: 0.9em;
-      color: #666;
+      background: white; 
+      margin: 20px auto;
+      max-width: 210mm; /* Ukuran A4 */
+    }
+    .watermark {
+      position: absolute; 
+      top: 40%; 
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 40px; 
+      color: rgba(0, 0, 0, 0.1);
+      white-space: nowrap; 
+      pointer-events: none; 
+      z-index: 0;
+    }
+    .signature-preview { 
+      margin-top: 40px; 
+    }
+    .logo-preview { 
+      max-width: 150px; 
+      margin-top: 10px; 
+      display: block; 
+    }
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .company-logo {
+      max-width: 120px;
+      max-height: 80px;
+    }
+    .invoice-title {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .invoice-meta {
+      text-align: right;
+    }
+    .client-info {
+      margin: 15px 0;
+    }
+    @media(max-width: 768px){
+      .toggle-sidebar { 
+        display: inline; 
+      }
+      nav {
+        flex-direction: column; 
+        position: absolute;
+        top: 60px; 
+        right: 10px; 
+        background: #4CAF50;
+        padding: 10px; 
+        display: none; 
+        z-index: 1000;
+        border-radius: 5px; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      }
+      nav.active { 
+        display: flex !important; 
+      }
+      .table-wrapper { 
+        overflow-x: scroll; 
+      }
+      table, th, td { 
+        font-size: 14px; 
+      }
+      .container { 
+        padding: 15px; 
+      }
+      .invoice-header {
+        flex-direction: column;
+      }
+      .invoice-meta {
+        text-align: left;
+        margin-top: 10px;
+      }
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 </head>
 <body>
+  <header>
+    <h1>INVOGO</h1>
+    <button class="toggle-sidebar" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+    <nav id="sidebarNav">
+      <button class="btn" onclick="showSection('nota')">Nota</button>
+      <button class="btn" onclick="showSection('pengaturan')">Pengaturan</button>
+      <button class="btn" onclick="showSection('akun')">Akun</button>
+    </nav>
+  </header>
 
-<!-- LOGIN -->
-<div id="login" class="container" style="max-width: 400px; margin-top: 60px;">
-  <h2>🔐 Login Pengguna</h2>
-  <input class="form-control" id="loginName" placeholder="Nama Pengguna">
-  <input class="form-control" id="loginPin" placeholder="PIN (4 digit)" type="password" maxlength="4">
-  <button class="btn" onclick="loginUser()">Masuk</button>
-</div>
+  <!-- FORM NOTA -->
+  <div id="nota" class="container">
+    <h2>Buat Nota</h2>
+    <input class="form-control" id="notaNumber" placeholder="Nomor Nota" value="INV-${generateInvoiceNumber()}">
+    <input class="form-control" type="date" id="notaDate" value="${new Date().toISOString().split('T')[0]}">
+    
+    <h3>Informasi Pelanggan</h3>
+    <input class="form-control" id="client" placeholder="Nama Pelanggan">
+    <input class="form-control" id="clientPhone" placeholder="No. HP Pelanggan">
+    <textarea class="form-control" id="clientAddress" placeholder="Alamat Pelanggan" rows="3"></textarea>
 
-<!-- HEADER -->
-<header style="display: none;">
-  <h1>INVOGO</h1>
-  <div>
-    <button class="btn" onclick="toggleDarkMode()" id="darkModeToggle">🌙</button>
-    <button class="btn" onclick="logoutUser()" id="logoutBtn">🚪 Logout</button>
+    <div style="display: flex; gap: 10px;">
+      <div style="flex: 1;">
+        <label>Diskon (%)</label>
+        <input type="number" class="form-control" id="discount" min="0" max="100" value="0" oninput="updateTotal()">
+      </div>
+      <div style="flex: 1;">
+        <label>Pajak (%)</label>
+        <input type="number" class="form-control" id="tax" min="0" max="100" value="0" oninput="updateTotal()">
+      </div>
+    </div>
+
+    <h3>Barang</h3>
+    <div class="table-wrapper">
+      <table id="items">
+        <thead>
+          <tr>
+            <th width="40%">Barang</th>
+            <th width="15%">Qty</th>
+            <th width="20%">Harga</th>
+            <th width="20%">Total</th>
+            <th width="5%"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Barang akan ditambahkan di sini -->
+        </tbody>
+      </table>
+    </div>
+    <button class="btn" onclick="addItem()"><i class="fas fa-plus"></i> Tambah Barang</button>
+    <button class="btn btn-danger" onclick="resetAllItems()"><i class="fas fa-broom"></i> Reset Semua Barang</button>
+
+    <div id="totalResult" style="margin-top: 15px; font-weight: bold; padding: 10px; background: #f5f5f5; border-radius: 5px;"></div>
+
+    <h3>Tanda Tangan</h3>
+    <canvas id="signature" width="300" height="100"></canvas><br>
+    <button class="btn" onclick="clearSignature()"><i class="fas fa-trash"></i> Hapus Tanda Tangan</button>
+
+    <div style="margin-top: 20px;">
+      <button class="btn" onclick="generatePreview()"><i class="fas fa-file-alt"></i> Preview & Simpan PDF</button>
+      <button class="btn" onclick="exportCSV()"><i class="fas fa-file-export"></i> Export CSV</button>
+    </div>
   </div>
-</header>
 
-  <!-- HALAMAN NOTA -->
-<div id="nota" class="container" style="display: none;">
-  <h2>Buat Nota</h2>
-  <input class="form-control" id="client" placeholder="Nama Pelanggan">
-  <input class="form-control" id="clientPhone" placeholder="Nomor HP (628...)">
-  <input class="form-control" id="clientEmail" placeholder="Email Pelanggan">
-  <input class="form-control" id="notaNumber" placeholder="Nomor Nota (misal: INV-001)">
+  <!-- PREVIEW NOTA -->
+  <div id="previewNota" class="container">
+    <div class="watermark">INVOGO | Official Copy</div>
+    <div id="notaContent"></div>
+    <div id="qrcode" style="margin-top: 20px;"></div>
+    <div class="signature-preview">
+      <strong>Disetujui oleh:</strong><br>
+      <img id="ttdImage" src="" width="200" style="border-bottom: 1px solid #000; margin-top: 10px;">
+    </div>
+    <button class="btn" onclick="downloadPDF()"><i class="fas fa-download"></i> Unduh PDF</button>
+    <button class="btn" onclick="showSection('nota')"><i class="fas fa-arrow-left"></i> Kembali</button>
+  </div>
 
-  <h3>Barang Dibeli</h3>
-  <table id="items">
-    <thead>
-      <tr><th>Nama Barang</th><th>Qty</th><th>Harga</th><th>Total</th><th>Aksi</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <button class="btn" onclick="addItem()">➕ Tambah Barang</button>
-  <button class="btn" onclick="clearItems()">🗑️ Reset Barang</button>
+  <!-- PENGATURAN & AKUN -->
+  <div id="pengaturan" class="container" style="display:none">
+    <h2>Pengaturan Usaha</h2>
+    <input class="form-control" id="namaUsaha" placeholder="Nama Usaha">
+    <textarea class="form-control" id="alamatUsaha" placeholder="Alamat Perusahaan" rows="3"></textarea>
+    <input class="form-control" id="kontak" placeholder="Kontak">
+    <input class="form-control" id="email" placeholder="Email">
+    <label for="uploadLogo" style="display: block; margin-top: 10px;">Logo Usaha:</label>
+    <input type="file" id="uploadLogo" class="form-control" onchange="previewLogo()" accept="image/*">
+    <img id="logoPreview" class="logo-preview">
+    <button class="btn" onclick="saveBusinessSettings()"><i class="fas fa-save"></i> Simpan Pengaturan</button>
+    <button class="btn" onclick="showSection('nota')"><i class="fas fa-arrow-left"></i> Kembali</button>
+  </div>
 
-  <h3>Total Keseluruhan: <span id="grandTotal">Rp 0</span></h3>
+  <div id="akun" class="container" style="display:none">
+    <h2>Akun</h2>
+    <input class="form-control" id="namaUser" placeholder="Nama Anda">
+    <button class="btn" onclick="saveUser()"><i class="fas fa-save"></i> Simpan Akun</button>
+    <button class="btn" onclick="showSection('nota')"><i class="fas fa-arrow-left"></i> Kembali</button>
+  </div>
 
-  <h3>Kirim Nota</h3>
-  <button class="btn" onclick="generatePreview()">🔎Preview</button>
-  <h3>Tanda Tangan</h3>
-<canvas id="signature" width="300" height="100" style="border:1px solid #ccc;"></canvas><br>
-<button class="btn" onclick="clearSignature()">🧼 Hapus Tanda Tangan</button>
-<div id="previewNota" style="margin-top:20px; padding:15px; border:1px solid #ccc; display:none;">
-  <h3>Preview</h3>
-  <p><strong>Nama:</strong> <span id="pNama"></span></p>
-  <p><strong>No. HP:</strong> <span id="pHP"></span></p>
-  <p><strong>Email:</strong> <span id="pEmail"></span></p>
-  <p><strong>Nomor Nota:</strong> <span id="pNota"></span></p>
-  <table id="previewItems" border="1" style="width:100%; border-collapse: collapse;">
-    <thead><tr><th>Barang</th><th>Qty</th><th>Harga</th><th>Total</th></tr></thead>
-    <tbody></tbody>
-  </table>
-  <p><strong>Total Keseluruhan:</strong> <span id="pGrandTotal"></span>
-    <br>
-    <h4>Disetujui oleh:</h4>
-<img id="ttdPreview" src="" width="200">
-  </p>
-</div>
-  <button class="btn" onclick="downloadPDF()">📄PDF</button>
-  <button class="btn" onclick="kirimWhatsapp()">📲 WhatsApp</button>
-  <button class="btn" onclick="kirimEmail()">✉️ Email</button>
-</div>
-
-<footer>InvoGo by Fasim Dev 2025</footer>
+  <footer>InvoGo by Fasim Dev 2025</footer>
 
 <script>
-function loginUser() {
-  const name = document.getElementById("loginName").value.trim();
-  const pin = document.getElementById("loginPin").value.trim();
-  if (!name || !/^[0-9]{4}$/.test(pin)) {
-    alert("Nama dan PIN 4 digit wajib diisi."); return;
-  }
-  localStorage.setItem("invogo_user", name);
-  localStorage.setItem("invogo_pin", pin);
-  document.getElementById("login").style.display = "none";
-  document.querySelector("header").style.display = "flex";
-  document.getElementById("nota").style.display = "block";
-  loadItems();
+// Variabel global
+let isDrawing = false;
+let lastX = 0;
+let lastY = 0;
+const canvas = document.getElementById("signature");
+const ctx = canvas.getContext("2d");
+
+// Fungsi navigasi
+function toggleSidebar() {
+  document.getElementById("sidebarNav").classList.toggle("active");
 }
 
-function logoutUser() {
-  if (confirm("Yakin logout?")) {
-    localStorage.clear(); location.reload();
+function showSection(id) {
+  ['nota','pengaturan','akun','previewNota'].forEach(s => {
+    document.getElementById(s).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'block';
+  document.getElementById("sidebarNav").classList.remove("active");
+  
+  // Jika menampilkan pengaturan, load data yang tersimpan
+  if (id === 'pengaturan') {
+    loadBusinessSettings();
+  }
+  
+  // Jika menampilkan akun, load data user
+  if (id === 'akun') {
+    loadUser();
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  if (localStorage.getItem("invogo_user")) {
-    document.getElementById("login").style.display = "none";
-    document.querySelector("header").style.display = "flex";
-    document.getElementById("nota").style.display = "block";
-    loadItems();
-  }
-  if (localStorage.getItem("invogo_mode") === "dark") {
-    document.body.classList.add("dark-mode");
-    document.getElementById("darkModeToggle").textContent = "☀️";
-  }
-});
-
-function toggleDarkMode() {
-  document.body.classList.toggle("dark-mode");
-  const mode = document.body.classList.contains("dark-mode") ? "dark" : "light";
-  localStorage.setItem("invogo_mode", mode);
-  document.getElementById("darkModeToggle").textContent = mode === "dark" ? "☀️" : "🌙";
+// Fungsi generate nomor invoice
+function generateInvoiceNumber() {
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const randomNum = Math.floor(Math.random() * 9000) + 1000;
+  return `${year}${month}${day}-${randomNum}`;
 }
 
-function addItem(name = "", qty = 1, price = 0) {
+// Fungsi tanda tangan
+function clearSignature() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function startDrawing(e) {
+  isDrawing = true;
+  [lastX, lastY] = [e.offsetX, e.offsetY];
+}
+
+function draw(e) {
+  if (!isDrawing) return;
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(e.offsetX, e.offsetY);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  [lastX, lastY] = [e.offsetX, e.offsetY];
+}
+
+function stopDrawing() {
+  isDrawing = false;
+}
+
+// Fungsi barang
+function addItem() {
+  const tbody = document.querySelector("#items tbody");
   const row = document.createElement("tr");
   row.innerHTML = `
-    <td><input value="${name}" onchange="saveItems()"></td>
-    <td><input type="number" value="${qty}" onchange="saveItems()"></td>
-    <td><input type="number" value="${price}" onchange="saveItems()"></td>
-    <td class="total">Rp 0</td>
-    <td><button onclick="this.closest('tr').remove(); saveItems();">❌</button></td>
+    <td><input class="form-control" placeholder="Nama barang" onchange="updateTotal()"></td>
+    <td><input class="form-control" type="number" min="1" value="1" onchange="updateTotal()"></td>
+    <td><input class="form-control" type="number" min="0" value="0" oninput="updateTotal()"></td>
+    <td><span>0</span></td>
+    <td><button class="btn btn-danger" onclick="this.parentElement.parentElement.remove(); updateTotal()"><i class="fas fa-trash"></i></button></td>
   `;
-  document.querySelector("#items tbody").appendChild(row);
-  saveItems();
-}
-
-function saveItems() {
-  const data = [];
-  document.querySelectorAll("#items tbody tr").forEach(tr => {
-    const [nama, qty, harga] = tr.querySelectorAll("input");
-    const total = parseFloat(qty.value) * parseFloat(harga.value);
-    tr.querySelector(".total").innerText = "Rp " + total.toLocaleString();
-    data.push({ nama: nama.value, qty: qty.value, harga: harga.value });
-  });
-  localStorage.setItem("invogo_barang", JSON.stringify(data));
+  tbody.appendChild(row);
   updateTotal();
 }
 
-function loadItems() {
-  const items = JSON.parse(localStorage.getItem("invogo_barang") || "[]");
-  items.forEach(i => addItem(i.nama, i.qty, i.harga));
-}
-
-function clearItems() {
-  if (confirm("Hapus semua barang?")) {
-    localStorage.removeItem("invogo_barang");
+function resetAllItems() {
+  if (confirm("Yakin ingin menghapus semua barang?")) {
     document.querySelector("#items tbody").innerHTML = "";
     updateTotal();
   }
 }
 
 function updateTotal() {
-  let total = 0;
-  document.querySelectorAll("#items tbody tr").forEach(tr => {
-    const qty = parseFloat(tr.querySelectorAll("input")[1].value);
-    const harga = parseFloat(tr.querySelectorAll("input")[2].value);
-    total += qty * harga;
-  });
-  document.getElementById("grandTotal").innerText = "Rp " + total.toLocaleString();
-}
-
-function kirimWhatsapp() {
-  const nama = document.getElementById("client").value;
-  const phone = document.getElementById("clientPhone").value.replace(/[^0-9]/g, "");
-  const nota = document.getElementById("notaNumber").value;
-  const total = document.getElementById("grandTotal").innerText;
-  const pesan = encodeURIComponent(`Halo ${nama}, berikut adalah nota Anda.\\nNo: ${nota}\\nTotal: ${total}\\nTerima kasih 🙏`);
-  if (phone.length >= 10) {
-    window.open(`https://wa.me/${phone}?text=${pesan}`, '_blank');
-  } else {
-    alert("Nomor HP tidak valid.");
-  }
-}
-
-function kirimEmail() {
-  const nama = document.getElementById("client").value;
-  const email = document.getElementById("clientEmail").value;
-  const nota = document.getElementById("notaNumber").value;
-  const total = document.getElementById("grandTotal").innerText;
-  const subject = `Nota INVOGO - ${nota}`;
-  const body = `Halo ${nama},%0D%0ANota Anda:%0D%0ANomor: ${nota}%0D%0ATotal: ${total}%0D%0ATerima kasih.`;
-  if (email.includes("@")) {
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-  } else {
-    alert("Email tidak valid.");
-  }
-}
+  let subtotal = 0;
+  const rows = document.querySelectorAll("#items tbody tr");
   
-function generatePreview() {
-  document.getElementById("pNama").innerText = document.getElementById("client").value;
-  document.getElementById("pHP").innerText = document.getElementById("clientPhone").value;
-  document.getElementById("pEmail").innerText = document.getElementById("clientEmail").value;
-  document.getElementById("pNota").innerText = document.getElementById("notaNumber").value;
-  document.getElementById("pGrandTotal").innerText = document.getElementById("grandTotal").innerText;
-
-  const tbody = document.getElementById("previewItems").querySelector("tbody");
-  tbody.innerHTML = "";
-  document.querySelectorAll("#items tbody tr").forEach(tr => {
-    const cells = tr.querySelectorAll("input");
-    const nama = cells[0].value;
-    const qty = cells[1].value;
-    const harga = cells[2].value;
-    const total = parseFloat(qty) * parseFloat(harga);
-    const row = `<tr><td>${nama}</td><td>${qty}</td><td>${harga}</td><td>Rp ${total.toLocaleString()}</td></tr>`;
-    tbody.innerHTML += row;
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll("input");
+    const qty = parseFloat(inputs[1].value) || 0;
+    const price = parseFloat(inputs[2].value) || 0;
+    const total = qty * price;
+    subtotal += total;
+    row.querySelector("span").textContent = formatCurrency(total);
   });
 
-  document.getElementById("previewNota").style.display = "block";
+  const discount = parseFloat(document.getElementById("discount").value) || 0;
+  const tax = parseFloat(document.getElementById("tax").value) || 0;
+  
+  const discountAmt = subtotal * (discount / 100);
+  const afterDiscount = subtotal - discountAmt;
+  const taxAmt = afterDiscount * (tax / 100);
+  const finalTotal = afterDiscount + taxAmt;
+
+  document.getElementById("totalResult").innerHTML = `
+    Subtotal: Rp ${formatCurrency(subtotal)}<br>
+    Diskon (${discount}%): -Rp ${formatCurrency(discountAmt)}<br>
+    Pajak (${tax}%): +Rp ${formatCurrency(taxAmt)}<br>
+    <strong>Total Akhir: Rp ${formatCurrency(finalTotal)}</strong>
+  `;
 }
 
-  function downloadPDF() {
+function formatCurrency(amount) {
+  return amount.toFixed(0).replace(/\d(?=(\d{3})+$)/g, '$&.');
+}
+
+// Fungsi export
+function generatePreview() {
+  // Validasi minimal ada satu barang
+  if (document.querySelectorAll("#items tbody tr").length === 0) {
+    alert("Tambahkan minimal satu barang terlebih dahulu!");
+    return;
+  }
+
+  // Dapatkan data dari form
+  const notaNumber = document.getElementById("notaNumber").value || "INVOGO-000";
+  const notaDate = document.getElementById("notaDate").value;
+  const client = document.getElementById("client").value || "-";
+  const clientPhone = document.getElementById("clientPhone").value || "-";
+  const clientAddress = document.getElementById("clientAddress").value || "-";
+  const businessSettings = JSON.parse(localStorage.getItem("businessSettings")) || {};
+  
+  // Buat konten nota untuk preview
+  let notaContent = `
+    <div class="invoice-header">
+      <div>
+        ${businessSettings.logo ? `<img src="${businessSettings.logo}" class="company-logo">` : ''}
+        <div class="invoice-title">${businessSettings.namaUsaha || 'INVOGO'}</div>
+        <div>${businessSettings.alamatUsaha || ''}</div>
+        <div>${businessSettings.kontak || ''}</div>
+        <div>${businessSettings.email || ''}</div>
+      </div>
+      <div class="invoice-meta">
+        <div><strong>No. Nota:</strong> ${notaNumber}</div>
+        <div><strong>Tanggal:</strong> ${formatDate(notaDate)}</div>
+      </div>
+    </div>
+    
+    <hr style="border-top: 1px solid #ccc; margin: 15px 0;">
+    
+    <div class="client-info">
+      <div><strong>Pelanggan:</strong> ${client}</div>
+      <div><strong>No. HP:</strong> ${clientPhone}</div>
+      <div><strong>Alamat:</strong> ${clientAddress.replace(/\n/g, '<br>')}</div>
+    </div>
+    
+    <div class="table-wrapper">
+      <table border="1" cellspacing="0" cellpadding="5" width="100%">
+        <thead>
+          <tr>
+            <th>Barang</th>
+            <th>Qty</th>
+            <th>Harga</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  // Tambahkan item barang
+  document.querySelectorAll("#items tbody tr").forEach(row => {
+    const inputs = row.querySelectorAll("input");
+    notaContent += `
+      <tr>
+        <td>${inputs[0].value || '-'}</td>
+        <td>${inputs[1].value}</td>
+        <td>Rp ${formatCurrency(parseFloat(inputs[2].value) || 0)}</td>
+        <td>Rp ${row.querySelector("span").textContent}</td>
+      </tr>
+    `;
+  });
+
+  // Tambahkan total
+  const totalResult = document.getElementById("totalResult").innerHTML;
+  notaContent += `
+        </tbody>
+      </table>
+    </div>
+    
+    <div style="margin-top: 20px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+      ${totalResult}
+    </div>
+  `;
+
+  document.getElementById("notaContent").innerHTML = notaContent;
+
+  // Generate QR Code
+  const signatureImage = canvas.toDataURL("image/png");
+  document.getElementById("ttdImage").src = signatureImage;
+  
+  document.getElementById("qrcode").innerHTML = "";
+  new QRCode(document.getElementById("qrcode"), {
+    text: notaNumber,
+    width: 100,
+    height: 100
+  });
+
+  showSection('previewNota');
+}
+
+function formatDate(dateString) {
+  if (!dateString) return "-";
+  const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+  return new Date(dateString).toLocaleDateString('id-ID', options);
+}
+
+function downloadPDF() {
   const element = document.getElementById("previewNota");
   const opt = {
-    margin:       0.5,
-    filename:     'Nota_INVOGO.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2 },
-    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    margin: 10,
+    filename: `Nota_${document.getElementById("notaNumber").value || 'INVOGO'}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2,
+      width: 210 * 3.78, // Lebar A4 dalam mm ke px (210mm * 3.78px/mm)
+      windowWidth: 800 // Lebar maksimum elemen
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait' 
+    }
   };
-  html2pdf().set(opt).from(element).save();
-}
-function clearSignature() {
-  const canvas = document.getElementById("signature");
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-function generatePreview() {
-  document.getElementById("pNama").innerText = document.getElementById("client").value;
-  document.getElementById("pHP").innerText = document.getElementById("clientPhone").value;
-  document.getElementById("pEmail").innerText = document.getElementById("clientEmail").value;
-  document.getElementById("pNota").innerText = document.getElementById("notaNumber").value;
-  document.getElementById("pGrandTotal").innerText = document.getElementById("grandTotal").innerText;
-
-  const tbody = document.getElementById("previewItems").querySelector("tbody");
-  tbody.innerHTML = "";
-  document.querySelectorAll("#items tbody tr").forEach(tr => {
-    const cells = tr.querySelectorAll("input");
-    const nama = cells[0].value;
-    const qty = cells[1].value;
-    const harga = cells[2].value;
-    const total = parseFloat(qty) * parseFloat(harga);
-    const row = `<tr><td>${nama}</td><td>${qty}</td><td>${harga}</td><td>Rp ${total.toLocaleString()}</td></tr>`;
-    tbody.innerHTML += row;
-  });
-
-  // ambil tanda tangan
-  const canvas = document.getElementById("signature");
-  const dataURL = canvas.toDataURL("image/png");
-  document.getElementById("ttdPreview").src = dataURL;
-
-  document.getElementById("previewNota").style.display = "block";
-}
-
-// Enable TTD
-document.addEventListener("DOMContentLoaded", () => {
-  const canvas = document.getElementById("signature");
-  if (canvas) {
-    const ctx = canvas.getContext("2d");
-    let isDrawing = false;
-
-    canvas.addEventListener("mousedown", e => {
-      isDrawing = true;
-      ctx.beginPath();
-      ctx.moveTo(e.offsetX, e.offsetY);
-    });
-
-    canvas.addEventListener("mousemove", e => {
-      if (isDrawing) {
-        ctx.lineTo(e.offsetX, e.offsetY);
-        ctx.stroke();
-      }
-    });
-
-    canvas.addEventListener("mouseup", () => isDrawing = false);
-    canvas.addEventListener("mouseout", () => isDrawing = false);
-  }
-});
-
   
-</script>
+  // Sembunyikan tombol sebelum export PDF
+  const buttons = element.querySelectorAll('button');
+  buttons.forEach(btn => btn.style.display = 'none');
+  
+  html2pdf().set(opt).from(element).save().then(() => {
+    // Tampilkan kembali tombol setelah export selesai
+    buttons.forEach(btn => btn.style.display = 'inline-block');
+  });
+}
 
-</body>
-</html>
+function exportCSV() {
+  let csv = "Barang,Qty,Harga,Total\n";
+  document.querySelectorAll("#items tbody tr").forEach(row => {
+    const inputs = row.querySelectorAll("input");
+    const total = row.querySelector("span").textContent.replace(/\./g, '');
+    csv += `"${inputs[0].value}",${inputs[1].value},${inputs[2].value},${total}\n`;
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Nota_${document.getElementById("notaNumber").value || 'INVOGO'}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// Fungsi pengaturan usaha
+function loadBusinessSettings() {
+  const settings = JSON.parse(localStorage.getItem("businessSettings")) || {};
+  document.getElementById("namaUsaha").value = settings.namaUsaha || "";
+  document.getElementById("alamatUsaha").value = settings.alamatUsaha || "";
+  document.getElementById("kontak").value = settings.kontak || "";
+  document.getElementById("email").value = settings.email || "";
+  document.getElementById("logoPreview").src = settings.logo || "";
+}
+
+function saveBusinessSettings() {
+  const settings = {
+    namaUsaha: document.getElementById("namaUsaha").value,
+    alamatUsaha: document.getElementById("alamatUsaha").value,
+    kontak: document.getElementById("kontak").value,
+    email: document.getElementById("email").value,
+    logo: document.getElementById("logoPreview").src || ""
+  };
+  
+  localStorage.setItem("businessSettings", JSON.stringify(settings));
+  alert("Pengaturan usaha berhasil disimpan!");
+}
+
+function previewLogo() {
+  const file = document.getElementById("uploadLogo").files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById("logoPreview").src = e.target.result;
+    }
+    reader.readAsDataURL(file);
+  }
+}
+
+// Fungsi akun pengguna
+function loadUser() {
+  const user = localStorage.getItem("user") || "";
+  document.getElementById("namaUser").value = user;
+}
+
+function saveUser() {
+  const namaUser = document.getElementById("namaUser").value.trim();
+  if (namaUser === "") {
+    alert("Nama tidak boleh kosong!");
+    return;
+  }
+  
+  localStorage.setItem("user", namaUser);
+  alert("Akun berhasil disimpan!");
+}
+
+// Event Listeners
+document.addEventListener("DOMContentLoaded", function() {
+  // Inisialisasi canvas tanda tangan
+  canvas.addEventListener("mousedown", startDrawing);
+  canvas.addEventListener("mousemove", draw);
+  canvas.addEventListener("mouseup", stopDrawing);
+  canvas.addEventListener("mouseout", stopDrawing);
+  
+  // Untuk perangkat touch
+  canvas.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const mouseEvent = new MouseEvent("mousedown", {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      offsetX: touch.clientX - rect.left,
+      offsetY: touch.clientY - rect.top
+    });
+    canvas.dispatchEvent(mouseEvent);
+  });
+  
+  canvas.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const mouseEvent = new MouseEvent("mousemove", {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+   
