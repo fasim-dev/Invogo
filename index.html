@@ -630,4 +630,40 @@ document.addEventListener("DOMContentLoaded", function() {
     const mouseEvent = new MouseEvent("mousemove", {
       clientX: touch.clientX,
       clientY: touch.clientY,
+      offsetX: touch.clientX - rect.left,
+      offsetY: touch.clientY - rect.top
+    });
+    canvas.dispatchEvent(mouseEvent);
+  });
+  
+  canvas.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const mouseEvent = new MouseEvent("mousemove", {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      offsetX: touch.clientX - rect.left,
+      offsetY: touch.clientY - rect.top
+    });
+    canvas.dispatchEvent(mouseEvent);
+  });
+  
+  canvas.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    const mouseEvent = new MouseEvent("mouseup", {});
+    canvas.dispatchEvent(mouseEvent);
+  });
+  
+  // Tambahkan satu barang default saat pertama kali load
+  if (document.querySelectorAll("#items tbody tr").length === 0) {
+    addItem();
+  }
+  
+  // Generate nomor invoice otomatis
+  document.getElementById("notaNumber").value = "INV-" + generateInvoiceNumber();
+});
+</script>
+</body>
+</html>
    
